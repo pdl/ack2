@@ -26,7 +26,11 @@ sub prep_environment {
     my @ack_args   = qw( ACK_OPTIONS ACKRC ACK_PAGER HOME ACK_COLOR_MATCH ACK_COLOR_FILENAME ACK_COLOR_LINE );
     my @taint_args = qw( PATH CDPATH IFS );
     delete @ENV{ @ack_args, @taint_args };
+
+    # XXX How is it that this guy is tainted?
     $orig_wd = Cwd::getcwd();
+    $orig_wd =~ /(.+)/;
+    $orig_wd = $1;
 }
 
 sub is_windows {
@@ -326,12 +330,15 @@ sub run_ack_with_stderr {
     my @stdout;
     my @stderr;
 
+    # XXX How is it $^X can be tainted?  We should not have to untainted it.
+    $^X =~ /(.+)/;
+    my $perl = $1;
     @args = build_ack_invocation( @args );
     if ( $ENV{'ACK_TEST_STANDALONE'} ) {
-        unshift( @args, $^X );
+        unshift( @args, $perl );
     }
     else {
-        unshift( @args, $^X, "-Mblib=$orig_wd" );
+        unshift( @args, $perl, "-Mblib=$orig_wd" );
     }
 
     return run_cmd( @args );
