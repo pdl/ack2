@@ -23,7 +23,9 @@ sub check_message {
 }
 
 sub prep_environment {
-    delete @ENV{qw( ACK_OPTIONS ACKRC ACK_PAGER HOME ACK_COLOR_MATCH ACK_COLOR_FILENAME ACK_COLOR_LINE )};
+    my @ack_args   = qw( ACK_OPTIONS ACKRC ACK_PAGER HOME ACK_COLOR_MATCH ACK_COLOR_FILENAME ACK_COLOR_LINE );
+    my @taint_args = qw( PATH CDPATH IFS );
+    delete @ENV{ @ack_args, @taint_args };
     $orig_wd = Cwd::getcwd();
 }
 
@@ -289,11 +291,11 @@ sub run_cmd {
 
             if(my $input = $options->{'input'}) {
                 # XXX check error
-                open STDIN, '-|', @$input or die "Can't open: $!";
+                open STDIN, '-|', @$input or die "Can't open STDIN: $!";
             }
 
-            open STDOUT, '>&', $stdout_write or die "Can't open: $!";
-            open STDERR, '>&', $stderr_write or die "Can't open: $!";
+            open STDOUT, '>&', $stdout_write or die "Can't open STDOUT: $!";
+            open STDERR, '>&', $stderr_write or die "Can't open STDERR: $!";
 
             exec @cmd;
         }
@@ -466,7 +468,7 @@ sub record_option_coverage {
         # strip the command line up until 'ack' is found
         $command_line =~ s/^.*ack\b//;
 
-        $command_line = "$^X $record_options $command_line";
+        $command_line = "$^X -T $record_options $command_line";
 
         system $command_line;
     }
@@ -475,7 +477,7 @@ sub record_option_coverage {
             shift @command_line;
         }
         shift @command_line; # get rid of 'ack' itself
-        unshift @command_line, $^X, $record_options;
+        unshift @command_line, $^X, '-T', $record_options;
 
         system @command_line;
     }
