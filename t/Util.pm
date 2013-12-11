@@ -208,7 +208,7 @@ sub run_cmd {
 
     record_option_coverage(@cmd);
 
-    taint_check_command( @cmd );
+    check_command_for_taintedness( @cmd );
 
     my ( @stdout, @stderr );
 
@@ -295,9 +295,9 @@ sub run_cmd {
             close $stdout_read;
             close $stderr_read;
 
-            if(my $input = $options->{'input'}) {
-                # XXX check error
-                open STDIN, '-|', @$input or die "Can't open STDIN: $!";
+            if (my $input = $options->{input}) {
+                check_command_for_taintedness( @{$input} );
+                open STDIN, '-|', @{$input} or die "Can't open STDIN: $!";
             }
 
             open STDOUT, '>&', $stdout_write or die "Can't open STDOUT: $!";
@@ -714,7 +714,8 @@ sub get_options {
 }
 
 
-sub taint_check_command {
+# This is just a handy diagnostic tool.
+sub check_command_for_taintedness {
     my @args = @_;
 
     my $bad = 0;
