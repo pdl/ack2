@@ -204,6 +204,8 @@ sub run_cmd {
 
     record_option_coverage(@cmd);
 
+    taint_check_command( @cmd );
+
     my ( @stdout, @stderr );
 
     if ( is_windows() ) {
@@ -702,6 +704,33 @@ sub get_options {
         '-w',
         '-x',
     );
+}
+
+
+sub taint_check_command {
+    my @args = @_;
+
+    my $bad = 0;
+
+    my @tainted;
+    for my $arg ( @args ) {
+        if ( is_tainted( $arg ) ) {
+            push( @tainted, $arg );
+        }
+    }
+
+    if ( @tainted ) {
+        die "Can't execute this command because of taintedness:\nAll args: @args\nTainted:  @tainted\n";
+    }
+
+    return;
+}
+
+
+sub is_tainted {
+    no warnings qw(void uninitialized);
+
+    return !eval { local $SIG{__DIE__} = 'DEFAULT'; join('', shift), kill 0; 1 };
 }
 
 1;
