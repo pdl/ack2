@@ -64,7 +64,12 @@ sub set_up_globals {
 sub clean_up_globals {
     foreach my $path (@created_globals) {
         my $filename = $path->{path};
-        unlink $filename or warn "Couldn't unlink $path";
+	if (-f $filename) {
+            unlink $filename or warn "Couldn't unlink $filename";
+	}
+        else {
+            warn 'Will not unlink because -f failed: '.$filename;
+        }
     }
 
     return;
