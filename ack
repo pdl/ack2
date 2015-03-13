@@ -431,7 +431,12 @@ sub print_matches_in_resource {
     if ( $opt_show_filename && $opt_heading && $opt_color ) {
         $display_filename = Term::ANSIColor::colored($display_filename, $ENV{ACK_COLOR_FILENAME});
     }
-
+    my $opt_irs = defined $opt->{input_record_separator}
+      ? $opt->{input_record_separator}
+        ? undef
+        : $opt->{input_record_separator}
+      : "\n" ;
+    local $/ = $opt_irs;
     # check for context before the main loop, so we don't
     # pay for it if we don't need it
     if ( $is_tracking_context ) {
@@ -541,12 +546,14 @@ sub print_matches_in_resource {
                 pos($contents)  = $prev_match_end;
                 $prev_match_end = $match_end;
 
-                while ( $contents =~ /\n/og && $-[0] < $match_start ) {
-                    $line_no++;
+                if ($opt_irs) {
+                    while ( $contents =~ /\Q$opt_irs\E/og && $-[0] < $match_start ) {
+                        $line_no++;
+                    }
                 }
 
-                my $start_line = rindex($contents, "\n", $match_start);
-                my $end_line   = index($contents, "\n", $match_end);
+                my $start_line = $opt_irs ? rindex($contents, $opt_irs, $match_start) : -1;
+                my $end_line   = $opt_irs ? index($contents, $opt_irs, $match_end)    : -1;
 
                 if ( $start_line == -1 ) {
                     $start_line = 0;
