@@ -48,6 +48,7 @@ our $opt_L;
 our $opt_l;
 our $opt_passthru;
 our $opt_column;
+our $opt_irs = "\n";
 # flag if we need any context tracking
 our $is_tracking_context;
 
@@ -431,11 +432,6 @@ sub print_matches_in_resource {
     if ( $opt_show_filename && $opt_heading && $opt_color ) {
         $display_filename = Term::ANSIColor::colored($display_filename, $ENV{ACK_COLOR_FILENAME});
     }
-    my $opt_irs = defined $opt->{input_record_separator}
-      ? $opt->{input_record_separator}
-        ? undef
-        : $opt->{input_record_separator}
-      : "\n" ;
     local $/ = $opt_irs;
     # check for context before the main loop, so we don't
     # pay for it if we don't need it
@@ -704,6 +700,7 @@ sub iterate {
     my ( $resource, $opt, $cb ) = @_;
 
     $is_iterating = 1;
+    local $/ = $opt_irs;
 
     my $fh = $resource->open();
     if ( !$fh ) {
@@ -837,6 +834,7 @@ sub get_match_column {
 
 sub resource_has_match {
     my ( $resource, $opt ) = @_;
+    local $/ = $opt_irs;
 
     my $has_match = 0;
     my $fh = $resource->open();
@@ -871,6 +869,7 @@ sub resource_has_match {
 
 sub count_matches_in_resource {
     my ( $resource, $opt ) = @_;
+    local $/ = $opt_irs;
 
     my $nmatches = 0;
     my $fh = $resource->open();
@@ -922,6 +921,12 @@ sub main {
     $opt_l              = $opt->{l};
     $opt_passthru       = $opt->{passthru};
     $opt_column         = $opt->{column};
+
+    $opt_irs = defined $opt->{input_record_separator}
+      ? $opt->{input_record_separator}
+        ? $opt->{input_record_separator}
+        : undef
+      : "\n" ;
 
     $App::Ack::report_bad_filenames = !$opt->{dont_report_bad_filenames};
 

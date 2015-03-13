@@ -325,7 +325,7 @@ EOT
                                     }
                                     $opt->{ifiles}->add($filter);
                                },
-        'input_record_separator|irs=s'
+        'input-record-separator|irs=s'
                             => \$opt->{input_record_separator},
         'lines=s'           => sub { shift; my $val = shift; push @{$opt->{lines}}, $val },
         'l|files-with-matches'
